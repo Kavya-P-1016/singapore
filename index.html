@@ -388,19 +388,21 @@
         pdfUrl: PDF.hotel,
         notes: '6 nights · Check-out Sun 5 Jul before 12:00 · 3 adults · Breakfast · 390 Victoria St · PNR 0177395323 · Non-refundable'
       },
-      // Universal Studios — 3 tickets, 2 Jul 2026
+      // Ticket list prices (e-voucher PDFs have no amounts — edit if your payment receipt differs)
+      // USS Super Peak ~S$81.30 · Luge 3+3 Standard ~S$33 · GBB combo ~S$52
       {
         id: 'tkt-uss-1',
         category: 'tickets',
         title: 'Universal Studios Singapore — Super Peak (Adult)',
         date: '2026-07-02',
         time: null,
-        amount: 0,
+        amount: 81.30,
         currency: 'SGD',
         reference: 'GTMCKCI7',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.uss,
-        notes: 'Guest 1 of 3 · Pre-book at managebookings.com · 8 Sentosa Gateway · Order AI0000117516034'
+        notes: 'Guest 1 of 3 · List price S$81.30 · Pre-book at managebookings.com · Order AI0000117516034'
       },
       {
         id: 'tkt-uss-2',
@@ -408,10 +410,11 @@
         title: 'Universal Studios Singapore — Super Peak (Adult)',
         date: '2026-07-02',
         time: null,
-        amount: 0,
+        amount: 81.30,
         currency: 'SGD',
         reference: 'GTK4XQZX',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.uss,
         notes: 'Guest 2 of 3 · Purchased 23 May 2026 by Krish Patel'
       },
@@ -421,26 +424,27 @@
         title: 'Universal Studios Singapore — Super Peak (Adult)',
         date: '2026-07-02',
         time: null,
-        amount: 0,
+        amount: 81.30,
         currency: 'SGD',
         reference: 'GTACTBTY',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.uss,
         notes: 'Guest 3 of 3 · Open dated admission'
       },
-      // Skyline Luge — 3 tickets, 3 Jul 2026 12:00
       {
         id: 'tkt-luge-1',
         category: 'tickets',
         title: 'Skyline Luge — 3 Rides + 3 Skyrides',
         date: '2026-07-03',
         time: '12:00',
-        amount: 0,
+        amount: 33,
         currency: 'SGD',
         reference: 'GTJ3GBDQ',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.luge,
-        notes: 'Guest 1 of 3 · Redeem at Siloso Beach walk-in lane · Order AI0000117617213'
+        notes: 'Guest 1 of 3 · List price S$33 (Standard) · Order AI0000117617213'
       },
       {
         id: 'tkt-luge-2',
@@ -448,12 +452,13 @@
         title: 'Skyline Luge — 3 Rides + 3 Skyrides',
         date: '2026-07-03',
         time: '12:00',
-        amount: 0,
+        amount: 33,
         currency: 'SGD',
         reference: 'GTWUJHJB',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.luge,
-        notes: 'Guest 2 of 3 · Arrive within 30 mins of slot'
+        notes: 'Guest 2 of 3 · Arrive within 30 mins of 12:00 slot'
       },
       {
         id: 'tkt-luge-3',
@@ -461,26 +466,27 @@
         title: 'Skyline Luge — 3 Rides + 3 Skyrides',
         date: '2026-07-03',
         time: '12:00',
-        amount: 0,
+        amount: 33,
         currency: 'SGD',
         reference: 'GTHG0KCC',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.luge,
         notes: 'Guest 3 of 3 · 45 Siloso Beach Walk, Sentosa'
       },
-      // Gardens by the Bay — 3 tickets
       {
         id: 'tkt-gbb-1',
         category: 'tickets',
         title: 'Gardens by the Bay — Flower Dome, Cloud Forest & Supertree',
         date: '2026-07-01',
         time: '09:00',
-        amount: 0,
+        amount: 52,
         currency: 'SGD',
         reference: 'GY4Y79399K7V',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.gardens,
-        notes: 'Guest 1 of 3 · Order PX2R1KN8N421 · Valid till 6 Jul 2026 · GLOBALTIX'
+        notes: 'Guest 1 of 3 · List price S$52 · Order PX2R1KN8N421 · GLOBALTIX · Valid till 6 Jul 2026'
       },
       {
         id: 'tkt-gbb-2',
@@ -488,10 +494,11 @@
         title: 'Gardens by the Bay — Flower Dome, Cloud Forest & Supertree',
         date: '2026-07-01',
         time: '09:00',
-        amount: 0,
+        amount: 52,
         currency: 'SGD',
         reference: 'GY8VJ6J6648Y',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.gardens,
         notes: 'Guest 2 of 3 · Supertree entry 9am–4pm'
       },
@@ -501,10 +508,11 @@
         title: 'Gardens by the Bay — Flower Dome, Cloud Forest & Supertree',
         date: '2026-07-01',
         time: '09:00',
-        amount: 0,
+        amount: 52,
         currency: 'SGD',
         reference: 'GY81ZG2GG05Y',
         status: 'confirmed',
+        priceEstimated: true,
         pdfUrl: PDF.gardens,
         notes: 'Guest 3 of 3 · Same-day visit, no re-entry'
       }
@@ -552,7 +560,8 @@
         reference: doc.reference,
         status: doc.status || 'confirmed',
         pdfUrl: doc.pdfUrl || null,
-        notes: doc.notes || ''
+        notes: doc.notes || '',
+        priceEstimated: doc.priceEstimated || false
       };
       documents.push(newDoc);
       render();
@@ -564,6 +573,18 @@
     // ─── Utilities ──────────────────────────────────────────────────────────
     function formatCurrency(amount, currency = 'SGD') {
       return new Intl.NumberFormat('en-SG', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount);
+    }
+
+    /** Show amount or em dash when missing; * = list price (not on e-voucher PDF). */
+    function formatDisplayAmount(doc) {
+      if (doc.amount == null || doc.amount <= 0) {
+        return { text: '—', title: 'No price on voucher — tap Edit to add', estimated: false };
+      }
+      return {
+        text: formatCurrency(doc.amount, doc.currency) + (doc.priceEstimated ? '*' : ''),
+        title: doc.priceEstimated ? 'Public list price — edit if your receipt differs' : '',
+        estimated: !!doc.priceEstimated
+      };
     }
 
     function formatDate(dateStr) {
@@ -722,6 +743,7 @@
     function renderDocumentCard(doc) {
       const statusClass = STATUS_STYLES[doc.status] || STATUS_STYLES.confirmed;
       const cat = CATEGORIES[doc.category];
+      const price = formatDisplayAmount(doc);
       return `
         <article class="card-hover animate-in bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-card dark:shadow-card-dark overflow-hidden" data-doc-id="${doc.id}">
           <div class="p-4 sm:p-5">
@@ -742,9 +764,9 @@
                 <i data-lucide="calendar" class="w-4 h-4 text-slate-400 shrink-0"></i>
                 <span class="break-words">${formatDate(doc.date)}${doc.time ? ' · ' + formatTime(doc.time) : ''}</span>
               </div>
-              <div class="flex items-center gap-2 text-sm font-semibold text-brand-700 dark:text-brand-400 sm:justify-end">
+              <div class="flex items-center gap-2 text-sm font-semibold text-brand-700 dark:text-brand-400 sm:justify-end" title="${price.title}">
                 <i data-lucide="banknote" class="w-4 h-4 shrink-0"></i>
-                <span class="break-words">${formatCurrency(doc.amount, doc.currency)}</span>
+                <span class="break-words ${price.estimated ? 'text-amber-700 dark:text-amber-400' : ''}">${price.text}</span>
               </div>
             </div>
             <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 mb-3 sm:mb-4 min-w-0">
@@ -815,7 +837,7 @@
                 Grand Total
               </h3>
               <p class="text-2xl sm:text-4xl font-bold text-brand-600 dark:text-brand-400 break-words">${formatCurrency(totalInr, 'INR')}</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Across ${filtered.length} documents · Attraction tickets: add amounts via Edit if needed</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Across ${filtered.length} documents · * = list price where voucher had no amount</p>
             </div>
             <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-card dark:shadow-card-dark">
               <h3 class="font-semibold mb-4 flex items-center gap-2">
@@ -1015,6 +1037,7 @@
         doc.currency = document.getElementById('edit-currency').value;
         doc.reference = document.getElementById('edit-reference').value.trim();
         doc.status = document.getElementById('edit-status').value;
+        doc.priceEstimated = false;
         closeModal('edit-modal');
         render();
       });
