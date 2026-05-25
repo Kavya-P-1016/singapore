@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#0f172a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="TripDocs" />
+  <meta name="format-detection" content="telephone=no" />
   <title>Travel Document Organizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -32,23 +34,91 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
     [x-cloak] { display: none !important; }
-    .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+    .safe-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0)); }
     .safe-top { padding-top: env(safe-area-inset-top, 0); }
     @media (max-width: 1023px) {
-      .main-scroll { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0)); }
+      .main-scroll {
+        padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+        -webkit-overflow-scrolling: touch;
+      }
     }
-    .nav-item.active { color: rgb(37 99 235); background: rgb(239 246 255); }
-    .dark .nav-item.active { color: rgb(96 165 250); background: rgb(30 58 138 / 0.35); }
-    .sidebar-item.active { background: linear-gradient(135deg, rgb(37 99 235), rgb(29 78 216)); color: white; box-shadow: 0 4px 14px rgba(37,99,235,.35); }
+    .mobile-nav-inner {
+      min-height: 3.75rem;
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    }
+    .nav-item {
+      min-height: 3rem;
+      min-width: 3rem;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .nav-item.active {
+      color: rgb(37 99 235);
+      background: rgb(239 246 255);
+    }
+    .dark .nav-item.active {
+      color: rgb(96 165 250);
+      background: rgb(30 58 138 / 0.35);
+    }
+    .nav-item.active .nav-dot { opacity: 1; transform: scale(1); }
+    .nav-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 9999px;
+      background: currentColor;
+      opacity: 0;
+      transform: scale(0);
+      transition: opacity .2s, transform .2s;
+    }
+    .sidebar-item.active {
+      background: linear-gradient(135deg, rgb(37 99 235), rgb(29 78 216));
+      color: white;
+      box-shadow: 0 4px 14px rgba(37,99,235,.35);
+    }
     .card-hover { transition: transform .2s ease, box-shadow .2s ease; }
-    .card-hover:hover { transform: translateY(-2px); }
+    @media (hover: hover) and (pointer: fine) {
+      .card-hover:hover { transform: translateY(-2px); }
+    }
+    .touch-btn {
+      min-height: 2.75rem;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .touch-btn:active { transform: scale(0.98); opacity: 0.92; }
+    .mobile-input { font-size: 1rem; }
+    @media (min-width: 640px) {
+      .mobile-input { font-size: 0.875rem; }
+    }
+    .pills-scroll {
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .pills-scroll::-webkit-scrollbar { display: none; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     .dark ::-webkit-scrollbar-thumb { background: #475569; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .animate-in { animation: fadeIn .35s ease forwards; }
     .modal-backdrop { backdrop-filter: blur(8px); }
+    @media (max-width: 639px) {
+      .edit-sheet { align-items: flex-end !important; padding: 0 !important; }
+      .edit-sheet-panel {
+        max-height: 92vh;
+        border-radius: 1.25rem 1.25rem 0 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+    }
   </style>
 </head>
 <body class="font-sans bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-300">
@@ -83,7 +153,7 @@
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Header -->
       <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 safe-top">
-        <div class="px-4 sm:px-6 lg:px-8 py-4">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div class="flex flex-col sm:flex-row sm:items-center gap-4">
             <div class="flex items-center justify-between lg:hidden">
               <div class="flex items-center gap-2">
@@ -95,7 +165,7 @@
                   <p class="text-[10px] text-slate-500 dark:text-slate-400 -mt-0.5">Patel Family · Jun 2026</p>
                 </div>
               </div>
-              <button id="theme-toggle-mobile" type="button" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" aria-label="Toggle theme">
+              <button id="theme-toggle-mobile" type="button" class="touch-btn p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" aria-label="Toggle theme">
                 <i data-lucide="moon" class="w-5 h-5 theme-icon-dark"></i>
                 <i data-lucide="sun" class="w-5 h-5 theme-icon-light hidden"></i>
               </button>
@@ -106,7 +176,7 @@
                 id="search-input"
                 type="search"
                 placeholder="Search documents, references, dates..."
-                class="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border-0 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/40 focus:outline-none transition-shadow"
+                class="mobile-input w-full pl-10 pr-4 py-3.5 sm:py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border-0 placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/40 focus:outline-none transition-shadow"
                 autocomplete="off"
               />
             </div>
@@ -116,19 +186,19 @@
 
       <!-- Expense Banner (hidden on summary tab) -->
       <div id="expense-banner" class="px-4 sm:px-6 lg:px-8 pt-4">
-        <div class="rounded-2xl bg-gradient-to-br from-brand-600 via-brand-700 to-indigo-800 p-5 sm:p-6 text-white shadow-lg shadow-brand-500/20 relative overflow-hidden">
+        <div class="rounded-2xl bg-gradient-to-br from-brand-600 via-brand-700 to-indigo-800 p-4 sm:p-6 text-white shadow-lg shadow-brand-500/20 relative overflow-hidden">
           <div class="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 blur-2xl"></div>
           <div class="absolute -left-4 -bottom-4 w-32 h-32 rounded-full bg-indigo-400/20 blur-xl"></div>
-          <div class="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div class="relative flex flex-col gap-3 sm:gap-4">
             <div>
-              <p class="text-brand-100 text-sm font-medium flex items-center gap-2">
-                <i data-lucide="wallet" class="w-4 h-4"></i>
+              <p class="text-brand-100 text-xs sm:text-sm font-medium flex items-center gap-2">
+                <i data-lucide="wallet" class="w-4 h-4 shrink-0"></i>
                 Total Trip Expenses
               </p>
-              <p id="total-expense" class="text-3xl sm:text-4xl font-bold tracking-tight mt-1">—</p>
+              <p id="total-expense" class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mt-1 break-words leading-tight">—</p>
               <p class="text-brand-200 text-xs mt-1"><span id="doc-count">0</span> documents tracked</p>
             </div>
-            <div id="category-pills" class="flex flex-wrap gap-2"></div>
+            <div id="category-pills" class="pills-scroll flex gap-2 overflow-x-auto pb-0.5 -mx-1 px-1 sm:flex-wrap sm:overflow-visible"></div>
           </div>
         </div>
       </div>
@@ -138,7 +208,7 @@
     </div>
 
     <!-- Mobile Bottom Nav -->
-    <nav id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 safe-bottom"></nav>
+    <nav id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_24px_rgba(0,0,0,.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,.3)]"></nav>
   </div>
 
   <!-- PDF Preview Modal -->
@@ -168,8 +238,8 @@
   </div>
 
   <!-- Edit Modal -->
-  <div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop bg-slate-900/60" role="dialog" aria-modal="true">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-in">
+  <div id="edit-modal" class="edit-sheet fixed inset-0 z-50 hidden items-center justify-center p-4 modal-backdrop bg-slate-900/60" role="dialog" aria-modal="true">
+    <div class="edit-sheet-panel bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-in">
       <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
         <h2 class="font-semibold text-lg">Edit Document</h2>
         <button type="button" data-close-modal="edit-modal" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Close">
@@ -180,7 +250,7 @@
         <input type="hidden" id="edit-id" />
         <div>
           <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5" for="edit-title">Title</label>
-          <input id="edit-title" type="text" required class="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-0 text-sm focus:ring-2 focus:ring-brand-500/40 focus:outline-none" />
+          <input id="edit-title" type="text" required class="mobile-input w-full px-4 py-3 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-0 focus:ring-2 focus:ring-brand-500/40 focus:outline-none" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -219,7 +289,7 @@
             <option value="expired">Expired</option>
           </select>
         </div>
-        <button type="submit" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm transition-colors">Save Changes</button>
+        <button type="submit" class="touch-btn w-full py-3.5 sm:py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm transition-colors">Save Changes</button>
       </form>
     </div>
   </div>
@@ -591,12 +661,14 @@
         </button>
       `).join('');
 
+      const mobileLabels = { flights: 'Flights', hotels: 'Hotels', tickets: 'Tickets', vouchers: 'Deals', summary: 'Summary' };
       mobileNav.innerHTML = `
-        <div class="flex items-stretch justify-around px-1 py-2">
+        <div class="mobile-nav-inner flex items-stretch justify-around px-0.5 pt-1.5">
           ${items.map(cat => `
-            <button type="button" data-category="${cat.id}" class="nav-item flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl min-w-0 flex-1 transition-colors ${activeCategory === cat.id ? 'active' : 'text-slate-500 dark:text-slate-400'}">
-              <span class="text-lg leading-none">${cat.emoji}</span>
-              <span class="text-[9px] font-medium truncate w-full text-center">${cat.label}</span>
+            <button type="button" data-category="${cat.id}" aria-label="${cat.label}" aria-current="${activeCategory === cat.id ? 'page' : 'false'}" class="nav-item flex flex-col items-center justify-center gap-0.5 px-1 rounded-xl min-w-0 flex-1 transition-colors ${activeCategory === cat.id ? 'active' : 'text-slate-500 dark:text-slate-400'}">
+              <span class="text-xl leading-none" aria-hidden="true">${cat.emoji}</span>
+              <span class="text-[10px] sm:text-[11px] font-semibold leading-tight text-center max-w-[4.5rem] truncate">${mobileLabels[cat.id] || cat.label}</span>
+              <span class="nav-dot" aria-hidden="true"></span>
             </button>
           `).join('')}
         </div>
@@ -610,6 +682,9 @@
     function setCategory(category) {
       activeCategory = category;
       render();
+      if (window.matchMedia('(max-width: 1023px)').matches) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
 
     // ─── Expense Banner ─────────────────────────────────────────────────────
@@ -637,7 +712,7 @@
         const catDocs = filtered.filter(d => d.category === key);
         const curr = catDocs.find(d => d.amount > 0)?.currency || 'INR';
         return `
-        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-xs font-medium backdrop-blur-sm">
+        <span class="inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-xs font-medium backdrop-blur-sm whitespace-nowrap">
           ${CATEGORIES[key].emoji} ${val > 0 ? formatCurrency(val, curr) : '—'}
         </span>`;
       }).join('');
@@ -649,40 +724,40 @@
       const cat = CATEGORIES[doc.category];
       return `
         <article class="card-hover animate-in bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-card dark:shadow-card-dark overflow-hidden" data-doc-id="${doc.id}">
-          <div class="p-5">
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div class="flex items-center gap-2 min-w-0">
-                <div class="w-9 h-9 rounded-lg bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
+          <div class="p-4 sm:p-5">
+            <div class="flex items-start justify-between gap-2 sm:gap-3 mb-3">
+              <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                <div class="w-10 h-10 sm:w-9 sm:h-9 rounded-xl sm:rounded-lg bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center shrink-0">
                   <i data-lucide="${cat.icon}" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
                 </div>
-                <div class="min-w-0">
-                  <h3 class="font-semibold text-sm leading-snug truncate">${doc.title}</h3>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-semibold text-[15px] sm:text-sm leading-snug line-clamp-2">${doc.title}</h3>
                   <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${cat.label}</p>
                 </div>
               </div>
-              <span class="shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide ${statusClass}">${doc.status}</span>
+              <span class="shrink-0 px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wide ${statusClass}">${doc.status}</span>
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                <span class="truncate">${formatDate(doc.date)}${doc.time ? ' · ' + formatTime(doc.time) : ''}</span>
+            <div class="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-3 mb-3 sm:mb-4">
+              <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 min-w-0">
+                <i data-lucide="calendar" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <span class="break-words">${formatDate(doc.date)}${doc.time ? ' · ' + formatTime(doc.time) : ''}</span>
               </div>
-              <div class="flex items-center gap-2 text-sm font-semibold text-brand-700 dark:text-brand-400 justify-end">
-                <i data-lucide="banknote" class="w-3.5 h-3.5 shrink-0"></i>
-                ${formatCurrency(doc.amount, doc.currency)}
+              <div class="flex items-center gap-2 text-sm font-semibold text-brand-700 dark:text-brand-400 sm:justify-end">
+                <i data-lucide="banknote" class="w-4 h-4 shrink-0"></i>
+                <span class="break-words">${formatCurrency(doc.amount, doc.currency)}</span>
               </div>
             </div>
-            <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 mb-4">
-              <i data-lucide="hash" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-              <span class="text-xs font-mono text-slate-600 dark:text-slate-300 truncate">${doc.reference}</span>
+            <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 mb-3 sm:mb-4 min-w-0">
+              <i data-lucide="hash" class="w-4 h-4 text-slate-400 shrink-0"></i>
+              <span class="text-xs font-mono text-slate-600 dark:text-slate-300 break-all">${doc.reference}</span>
             </div>
-            ${doc.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">${doc.notes}</p>` : ''}
-            <div class="flex gap-2">
-              <button type="button" data-action="view-pdf" data-id="${doc.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm font-medium transition-colors">
+            ${doc.notes ? `<p class="text-xs text-slate-500 dark:text-slate-400 mb-3 sm:mb-4 line-clamp-3 leading-relaxed">${doc.notes}</p>` : ''}
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <button type="button" data-action="view-pdf" data-id="${doc.id}" class="touch-btn flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm font-medium transition-colors">
                 <i data-lucide="file-text" class="w-4 h-4"></i>
                 View PDF
               </button>
-              <button type="button" data-action="edit" data-id="${doc.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors">
+              <button type="button" data-action="edit" data-id="${doc.id}" class="touch-btn flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors">
                 <i data-lucide="pencil" class="w-4 h-4"></i>
                 Edit
               </button>
@@ -739,7 +814,7 @@
                 <i data-lucide="trending-up" class="w-5 h-5 text-brand-500"></i>
                 Grand Total
               </h3>
-              <p class="text-4xl font-bold text-brand-600 dark:text-brand-400">${formatCurrency(totalInr, 'INR')}</p>
+              <p class="text-2xl sm:text-4xl font-bold text-brand-600 dark:text-brand-400 break-words">${formatCurrency(totalInr, 'INR')}</p>
               <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Across ${filtered.length} documents · Attraction tickets: add amounts via Edit if needed</p>
             </div>
             <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-card dark:shadow-card-dark">
@@ -794,16 +869,16 @@
         const docs = getFilteredDocs(activeCategory);
         main.innerHTML = `
           <div class="animate-in">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-5 sm:mb-6">
               <div>
-                <h2 class="text-xl font-bold flex items-center gap-2">
+                <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
                   <span>${cat.emoji}</span> ${cat.label}
                 </h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">${cat.description} · ${docs.length} document${docs.length !== 1 ? 's' : ''}</p>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">${cat.description} · ${docs.length} document${docs.length !== 1 ? 's' : ''}</p>
               </div>
               ${docs.length ? `
-                <p class="text-sm font-semibold text-brand-600 dark:text-brand-400 hidden sm:block">
-                  ${formatCurrency(docs.reduce((s, d) => s + d.amount, 0), 'SGD')} subtotal
+                <p class="text-sm font-semibold text-brand-600 dark:text-brand-400">
+                  ${formatCurrency(docs.reduce((s, d) => s + d.amount, 0), docs.find(d => d.amount > 0)?.currency || 'INR')} subtotal
                 </p>
               ` : ''}
             </div>
