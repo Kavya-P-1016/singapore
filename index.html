@@ -196,7 +196,7 @@
                 Total Trip Expenses
               </p>
               <p id="total-expense" class="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mt-1 break-words leading-tight">—</p>
-              <p class="text-brand-200 text-xs mt-1"><span id="doc-count">0</span> documents tracked</p>
+              <p class="text-brand-200 text-xs mt-1"><span id="doc-count">0</span> documents · <span id="fx-rate-label">₹74.89/SGD (24 May 2026)</span></p>
             </div>
             <div id="category-pills" class="pills-scroll flex gap-2 overflow-x-auto pb-0.5 -mx-1 px-1 sm:flex-wrap sm:overflow-visible"></div>
           </div>
@@ -320,6 +320,18 @@
       gardens: 'documents/booking_AI0000117615387.pdf'
     };
 
+    // SGD → INR (24 May 2026): 2124 SGD = 158,971.70 INR → ₹74.89 per SGD
+    const FX = { SGD_INR: 74.89, date: '2026-05-24' };
+
+    function sgdToInr(sgd) {
+      return Math.round(Number(sgd) * FX.SGD_INR);
+    }
+
+    function amountInInr(doc) {
+      if (!doc.amount) return 0;
+      return doc.currency === 'SGD' ? sgdToInr(doc.amount) : doc.amount;
+    }
+
     let documents = [
       // Singapore Airlines — 3 passengers, same PNR DRXRU9
       {
@@ -388,21 +400,21 @@
         pdfUrl: PDF.hotel,
         notes: '6 nights · Check-out Sun 5 Jul before 12:00 · 3 adults · Breakfast · 390 Victoria St · PNR 0177395323 · Non-refundable'
       },
-      // Ticket list prices (e-voucher PDFs have no amounts — edit if your payment receipt differs)
-      // USS Super Peak ~S$81.30 · Luge 3+3 Standard ~S$33 · GBB combo ~S$52
+      // Tickets: list price in SGD → INR @ ₹74.89/SGD (24 May 2026)
       {
         id: 'tkt-uss-1',
         category: 'tickets',
         title: 'Universal Studios Singapore — Super Peak (Adult)',
         date: '2026-07-02',
         time: null,
-        amount: 81.30,
-        currency: 'SGD',
+        amount: 6085,
+        currency: 'INR',
         reference: 'GTMCKCI7',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 81.30,
         pdfUrl: PDF.uss,
-        notes: 'Guest 1 of 3 · List price S$81.30 · Pre-book at managebookings.com · Order AI0000117516034'
+        notes: 'Guest 1 of 3 · S$81.30 → ₹6,085 @ ₹74.89 · Pre-book managebookings.com'
       },
       {
         id: 'tkt-uss-2',
@@ -410,11 +422,12 @@
         title: 'Universal Studios Singapore — Super Peak (Adult)',
         date: '2026-07-02',
         time: null,
-        amount: 81.30,
-        currency: 'SGD',
+        amount: 6085,
+        currency: 'INR',
         reference: 'GTK4XQZX',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 81.30,
         pdfUrl: PDF.uss,
         notes: 'Guest 2 of 3 · Purchased 23 May 2026 by Krish Patel'
       },
@@ -424,11 +437,12 @@
         title: 'Universal Studios Singapore — Super Peak (Adult)',
         date: '2026-07-02',
         time: null,
-        amount: 81.30,
-        currency: 'SGD',
+        amount: 6085,
+        currency: 'INR',
         reference: 'GTACTBTY',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 81.30,
         pdfUrl: PDF.uss,
         notes: 'Guest 3 of 3 · Open dated admission'
       },
@@ -438,13 +452,14 @@
         title: 'Skyline Luge — 3 Rides + 3 Skyrides',
         date: '2026-07-03',
         time: '12:00',
-        amount: 33,
-        currency: 'SGD',
+        amount: 2471,
+        currency: 'INR',
         reference: 'GTJ3GBDQ',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 33,
         pdfUrl: PDF.luge,
-        notes: 'Guest 1 of 3 · List price S$33 (Standard) · Order AI0000117617213'
+        notes: 'Guest 1 of 3 · S$33 → ₹2,471 @ ₹74.89 · Order AI0000117617213'
       },
       {
         id: 'tkt-luge-2',
@@ -452,11 +467,12 @@
         title: 'Skyline Luge — 3 Rides + 3 Skyrides',
         date: '2026-07-03',
         time: '12:00',
-        amount: 33,
-        currency: 'SGD',
+        amount: 2471,
+        currency: 'INR',
         reference: 'GTWUJHJB',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 33,
         pdfUrl: PDF.luge,
         notes: 'Guest 2 of 3 · Arrive within 30 mins of 12:00 slot'
       },
@@ -466,11 +482,12 @@
         title: 'Skyline Luge — 3 Rides + 3 Skyrides',
         date: '2026-07-03',
         time: '12:00',
-        amount: 33,
-        currency: 'SGD',
+        amount: 2471,
+        currency: 'INR',
         reference: 'GTHG0KCC',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 33,
         pdfUrl: PDF.luge,
         notes: 'Guest 3 of 3 · 45 Siloso Beach Walk, Sentosa'
       },
@@ -480,13 +497,14 @@
         title: 'Gardens by the Bay — Flower Dome, Cloud Forest & Supertree',
         date: '2026-07-01',
         time: '09:00',
-        amount: 52,
-        currency: 'SGD',
+        amount: 3894,
+        currency: 'INR',
         reference: 'GY4Y79399K7V',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 52,
         pdfUrl: PDF.gardens,
-        notes: 'Guest 1 of 3 · List price S$52 · Order PX2R1KN8N421 · GLOBALTIX · Valid till 6 Jul 2026'
+        notes: 'Guest 1 of 3 · S$52 → ₹3,894 @ ₹74.89 · Order PX2R1KN8N421 · GLOBALTIX'
       },
       {
         id: 'tkt-gbb-2',
@@ -494,11 +512,12 @@
         title: 'Gardens by the Bay — Flower Dome, Cloud Forest & Supertree',
         date: '2026-07-01',
         time: '09:00',
-        amount: 52,
-        currency: 'SGD',
+        amount: 3894,
+        currency: 'INR',
         reference: 'GY8VJ6J6648Y',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 52,
         pdfUrl: PDF.gardens,
         notes: 'Guest 2 of 3 · Supertree entry 9am–4pm'
       },
@@ -508,11 +527,12 @@
         title: 'Gardens by the Bay — Flower Dome, Cloud Forest & Supertree',
         date: '2026-07-01',
         time: '09:00',
-        amount: 52,
-        currency: 'SGD',
+        amount: 3894,
+        currency: 'INR',
         reference: 'GY81ZG2GG05Y',
         status: 'confirmed',
         priceEstimated: true,
+        sgdAmount: 52,
         pdfUrl: PDF.gardens,
         notes: 'Guest 3 of 3 · Same-day visit, no re-entry'
       }
@@ -631,8 +651,16 @@
       return totals;
     }
 
+    function getExpensesByCategoryInr(docs = documents) {
+      const totals = { flights: 0, hotels: 0, tickets: 0, vouchers: 0 };
+      docs.forEach(d => {
+        if (totals[d.category] !== undefined) totals[d.category] += amountInInr(d);
+      });
+      return totals;
+    }
+
     function getTotalExpense() {
-      return documents.reduce((sum, d) => sum + d.amount, 0);
+      return documents.reduce((sum, d) => sum + amountInInr(d), 0);
     }
 
     // ─── Theme ────────────────────────────────────────────────────────────────
@@ -715,28 +743,18 @@
       banner.classList.toggle('hidden', false);
 
       const filtered = searchQuery ? getGlobalFilteredDocs() : documents;
-      const totalByCurrency = filtered.reduce((acc, d) => {
-        acc[d.currency] = (acc[d.currency] || 0) + d.amount;
-        return acc;
-      }, {});
-      const primaryCurrency = totalByCurrency.INR ? 'INR' : 'SGD';
-      const total = totalByCurrency[primaryCurrency] || 0;
-      const otherCurrencies = Object.entries(totalByCurrency).filter(([c]) => c !== primaryCurrency && totalByCurrency[c] > 0);
+      const totalInr = filtered.reduce((s, d) => s + amountInInr(d), 0);
 
-      document.getElementById('total-expense').textContent = formatCurrency(total, primaryCurrency) +
-        (otherCurrencies.length ? ' +' + otherCurrencies.map(([c, a]) => formatCurrency(a, c)).join(' +') : '');
+      document.getElementById('total-expense').textContent = formatCurrency(totalInr, 'INR');
       document.getElementById('doc-count').textContent = filtered.length;
+      document.getElementById('fx-rate-label').textContent = `₹${FX.SGD_INR}/SGD (${formatDate(FX.date)})`;
 
-      const breakdown = getExpensesByCategory();
+      const breakdown = getExpensesByCategoryInr(filtered);
       const pills = document.getElementById('category-pills');
-      pills.innerHTML = Object.entries(breakdown).map(([key, val]) => {
-        const catDocs = filtered.filter(d => d.category === key);
-        const curr = catDocs.find(d => d.amount > 0)?.currency || 'INR';
-        return `
+      pills.innerHTML = Object.entries(breakdown).map(([key, val]) => `
         <span class="inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-xs font-medium backdrop-blur-sm whitespace-nowrap">
-          ${CATEGORIES[key].emoji} ${val > 0 ? formatCurrency(val, curr) : '—'}
-        </span>`;
-      }).join('');
+          ${CATEGORIES[key].emoji} ${val > 0 ? formatCurrency(val, 'INR') : '—'}
+        </span>`).join('');
     }
 
     // ─── Document Card ──────────────────────────────────────────────────────
@@ -792,14 +810,8 @@
     // ─── Summary View ───────────────────────────────────────────────────────
     function renderSummaryView() {
       const filtered = searchQuery ? getGlobalFilteredDocs() : documents;
-      const breakdown = {};
-      const breakdownCurrency = {};
-      ['flights', 'hotels', 'tickets', 'vouchers'].forEach(k => {
-        const catDocs = filtered.filter(d => d.category === k);
-        breakdown[k] = catDocs.reduce((s, d) => s + d.amount, 0);
-        breakdownCurrency[k] = catDocs.find(d => d.amount > 0)?.currency || 'INR';
-      });
-      const totalInr = filtered.filter(d => d.currency === 'INR').reduce((s, d) => s + d.amount, 0);
+      const breakdown = getExpensesByCategoryInr(filtered);
+      const totalInr = filtered.reduce((s, d) => s + amountInInr(d), 0);
       const maxVal = Math.max(...Object.values(breakdown), 1);
 
       const statusCounts = filtered.reduce((acc, d) => {
@@ -822,7 +834,7 @@
                   <i data-lucide="arrow-right" class="w-4 h-4 text-slate-300 group-hover:text-brand-500 transition-colors"></i>
                 </div>
                 <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${CATEGORIES[key].label}</p>
-                <p class="text-xl font-bold mt-1">${val > 0 ? formatCurrency(val, breakdownCurrency[key]) : '—'}</p>
+                <p class="text-xl font-bold mt-1">${val > 0 ? formatCurrency(val, 'INR') : '—'}</p>
                 <div class="mt-3 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all" style="width: ${(val / maxVal) * 100}%"></div>
                 </div>
@@ -837,7 +849,7 @@
                 Grand Total
               </h3>
               <p class="text-2xl sm:text-4xl font-bold text-brand-600 dark:text-brand-400 break-words">${formatCurrency(totalInr, 'INR')}</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Across ${filtered.length} documents · * = list price where voucher had no amount</p>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">All amounts in INR · Tickets converted @ ₹${FX.SGD_INR}/SGD (${formatDate(FX.date)}) · * = estimated list price</p>
             </div>
             <div class="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-card dark:shadow-card-dark">
               <h3 class="font-semibold mb-4 flex items-center gap-2">
@@ -900,7 +912,7 @@
               </div>
               ${docs.length ? `
                 <p class="text-sm font-semibold text-brand-600 dark:text-brand-400">
-                  ${formatCurrency(docs.reduce((s, d) => s + d.amount, 0), docs.find(d => d.amount > 0)?.currency || 'INR')} subtotal
+                  ${formatCurrency(docs.reduce((s, d) => s + amountInInr(d), 0), 'INR')} subtotal
                 </p>
               ` : ''}
             </div>
