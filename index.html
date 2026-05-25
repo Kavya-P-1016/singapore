@@ -111,6 +111,18 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .animate-in { animation: fadeIn .35s ease forwards; }
     .modal-backdrop { backdrop-filter: blur(8px); }
+    .date-timeline-line {
+      position: absolute;
+      left: 1.125rem;
+      top: 2.75rem;
+      bottom: -1.5rem;
+      width: 2px;
+      background: linear-gradient(to bottom, rgb(191 219 254), rgb(226 232 240));
+    }
+    .dark .date-timeline-line {
+      background: linear-gradient(to bottom, rgb(30 58 138 / 0.5), rgb(51 65 85));
+    }
+    .date-section:last-child .date-timeline-line { display: none; }
     @media (max-width: 639px) {
       .edit-sheet { align-items: flex-end !important; padding: 0 !important; }
       .edit-sheet-panel {
@@ -300,8 +312,12 @@
       flights: { id: 'flights', label: 'Flights', emoji: '✈️', icon: 'plane', description: 'Singapore Airlines & Returns' },
       hotels: { id: 'hotels', label: 'Hotels', emoji: '🏨', icon: 'building-2', description: 'Hotels & Bookings' },
       tickets: { id: 'tickets', label: 'Tickets', emoji: '🎟️', icon: 'ticket', description: 'Attraction Tickets' },
-      vouchers: { id: 'vouchers', label: 'Vouchers', emoji: '💵', icon: 'tag', description: 'Coupons & Discounts' },
-      summary: { id: 'summary', label: 'Summary', emoji: '📊', icon: 'pie-chart', description: 'Expenses Overview' }
+      vouchers: { id: 'vouchers', label: 'Vouchers', emoji: '💵', icon: 'tag', description: 'Coupons & Discounts' }
+    };
+
+    const VIEWS = {
+      timeline: { id: 'timeline', label: 'By Date', emoji: '📅', icon: 'calendar-days', description: 'Trip itinerary day by day' },
+      summary: { id: 'summary', label: 'Summary', emoji: '📊', icon: 'pie-chart', description: 'Expenses overview' }
     };
 
     const STATUS_STYLES = {
@@ -539,7 +555,7 @@
     ];
 
     // ─── State ──────────────────────────────────────────────────────────────
-    let activeCategory = 'flights';
+    let activeCategory = 'timeline';
     let searchQuery = '';
     let editingDocId = null;
 
@@ -611,6 +627,10 @@
       return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-SG', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
     }
 
+    function formatDateShort(dateStr) {
+      return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-SG', { day: 'numeric', month: 'short' });
+    }
+
     function formatTime(timeStr) {
       if (!timeStr) return '';
       const [h, m] = timeStr.split(':');
@@ -621,17 +641,6 @@
 
     function capitalize(s) {
       return s.charAt(0).toUpperCase() + s.slice(1);
-    }
-
-    function getFilteredDocs(category = activeCategory) {
-      if (category === 'summary') return documents;
-      return documents.filter(d => {
-        const matchCategory = d.category === category;
-        const q = searchQuery.toLowerCase().trim();
-        if (!q) return matchCategory;
-        const searchable = [d.title, d.reference, d.notes, d.date, d.status, d.currency, String(d.amount)].join(' ').toLowerCase();
-        return matchCategory && searchable.includes(q);
-      });
     }
 
     function getGlobalFilteredDocs() {
@@ -663,6 +672,34 @@
       return documents.reduce((sum, d) => sum + amountInInr(d), 0);
     }
 
+    function docSortKey(doc) {
+      const time = doc.time || '99:99';
+      return `${doc.date}T${time}`;
+    }
+
+    function groupDocumentsByDate(docs) {
+      const groups = new Map();
+      docs.forEach(doc => {
+        const key = doc.date || 'unknown';
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(doc);
+      });
+      return Array.from(groups.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, items]) => ({
+          date,
+          docs: items.sort((a, b) => docSortKey(a).localeCompare(docSortKey(b))),
+          totalInr: items.reduce((s, d) => s + amountInInr(d), 0)
+        }));
+    }
+
+    function getTripDateRange(docs) {
+      if (!docs.length) return '';
+      const dates = docs.map(d => d.date).filter(Boolean).sort();
+      if (dates.length === 1) return formatDate(dates[0]);
+      return `${formatDate(dates[0])} → ${formatDate(dates[dates.length - 1])}`;
+    }
+
     // ─── Theme ────────────────────────────────────────────────────────────────
     function initTheme() {
       const stored = localStorage.getItem('tripdocs-theme');
@@ -688,9 +725,10 @@
 
     // ─── Navigation ─────────────────────────────────────────────────────────
     function buildNavItems() {
-      return Object.values(CATEGORIES).map(cat => ({
-        ...cat,
-        count: cat.id === 'summary' ? documents.length : documents.filter(d => d.category === cat.id).length
+      const dayCount = new Set(documents.map(d => d.date)).size;
+      return Object.values(VIEWS).map(view => ({
+        ...view,
+        count: view.id === 'timeline' ? dayCount : documents.length
       }));
     }
 
@@ -706,11 +744,11 @@
             <span class="block">${cat.label}</span>
             <span class="block text-[10px] opacity-70 font-normal">${cat.description}</span>
           </div>
-          ${cat.id !== 'summary' ? `<span class="text-xs px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-700/80">${cat.count}</span>` : ''}
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-700/80">${cat.count}</span>
         </button>
       `).join('');
 
-      const mobileLabels = { flights: 'Flights', hotels: 'Hotels', tickets: 'Tickets', vouchers: 'Deals', summary: 'Summary' };
+      const mobileLabels = { timeline: 'Dates', summary: 'Summary' };
       mobileNav.innerHTML = `
         <div class="mobile-nav-inner flex items-stretch justify-around px-0.5 pt-1.5">
           ${items.map(cat => `
@@ -749,11 +787,11 @@
       document.getElementById('doc-count').textContent = filtered.length;
       document.getElementById('fx-rate-label').textContent = `₹${FX.SGD_INR}/SGD (${formatDate(FX.date)})`;
 
-      const breakdown = getExpensesByCategoryInr(filtered);
+      const dateGroups = groupDocumentsByDate(filtered);
       const pills = document.getElementById('category-pills');
-      pills.innerHTML = Object.entries(breakdown).map(([key, val]) => `
+      pills.innerHTML = dateGroups.map(g => `
         <span class="inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 text-xs font-medium backdrop-blur-sm whitespace-nowrap">
-          ${CATEGORIES[key].emoji} ${val > 0 ? formatCurrency(val, 'INR') : '—'}
+          ${formatDateShort(g.date)} ${g.totalInr > 0 ? formatCurrency(g.totalInr, 'INR') : '—'}
         </span>`).join('');
     }
 
@@ -779,8 +817,8 @@
             </div>
             <div class="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-3 mb-3 sm:mb-4">
               <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 min-w-0">
-                <i data-lucide="calendar" class="w-4 h-4 text-slate-400 shrink-0"></i>
-                <span class="break-words">${formatDate(doc.date)}${doc.time ? ' · ' + formatTime(doc.time) : ''}</span>
+                <i data-lucide="clock" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                <span class="break-words">${doc.time ? formatTime(doc.time) : 'All day'}</span>
               </div>
               <div class="flex items-center gap-2 text-sm font-semibold text-brand-700 dark:text-brand-400 sm:justify-end" title="${price.title}">
                 <i data-lucide="banknote" class="w-4 h-4 shrink-0"></i>
@@ -807,12 +845,68 @@
       `;
     }
 
+    function renderDateSection(group, isLast) {
+      const docCount = group.docs.length;
+      return `
+        <section class="date-section relative pl-0 sm:pl-2 ${isLast ? '' : 'pb-8'}" data-date="${group.date}">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="relative z-10 w-9 h-9 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-500/30 shrink-0">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-base sm:text-lg">${formatDate(group.date)}</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">${docCount} booking${docCount !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+            ${group.totalInr > 0 ? `
+              <p class="text-sm font-semibold text-brand-600 dark:text-brand-400 sm:text-right pl-12 sm:pl-0">
+                Day total: ${formatCurrency(group.totalInr, 'INR')}
+              </p>
+            ` : ''}
+          </div>
+          <div class="relative sm:ml-4">
+            <div class="date-timeline-line hidden sm:block" aria-hidden="true"></div>
+            <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              ${group.docs.map(renderDocumentCard).join('')}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderTimelineView() {
+      const filtered = searchQuery ? getGlobalFilteredDocs() : documents;
+      const groups = groupDocumentsByDate(filtered);
+
+      if (!groups.length) {
+        return `<div class="animate-in">${emptyState(searchQuery ? 'No matches for your search' : 'No documents yet')}</div>`;
+      }
+
+      return `
+        <div class="animate-in space-y-2">
+          <div class="mb-6">
+            <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
+              <span>📅</span> Trip Timeline
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              ${getTripDateRange(filtered)} · ${groups.length} day${groups.length !== 1 ? 's' : ''} · ${filtered.length} bookings
+            </p>
+          </div>
+          <div class="space-y-2">
+            ${groups.map((g, i) => renderDateSection(g, i === groups.length - 1)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     // ─── Summary View ───────────────────────────────────────────────────────
     function renderSummaryView() {
       const filtered = searchQuery ? getGlobalFilteredDocs() : documents;
+      const dateGroups = groupDocumentsByDate(filtered);
       const breakdown = getExpensesByCategoryInr(filtered);
       const totalInr = filtered.reduce((s, d) => s + amountInInr(d), 0);
-      const maxVal = Math.max(...Object.values(breakdown), 1);
+      const maxVal = Math.max(...dateGroups.map(g => g.totalInr), 1);
 
       const statusCounts = filtered.reduce((acc, d) => {
         acc[d.status] = (acc[d.status] || 0) + 1;
@@ -823,22 +917,32 @@
         <div class="space-y-6 animate-in">
           <div>
             <h2 class="text-xl font-bold mb-1">Expense Overview</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Complete breakdown of your Singapore trip</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">${getTripDateRange(filtered)} · ${dateGroups.length} days</p>
           </div>
 
-          <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            ${Object.entries(breakdown).map(([key, val]) => `
-              <button type="button" data-goto="${key}" class="text-left p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-card dark:shadow-card-dark hover:border-brand-300 dark:hover:border-brand-700 transition-colors group">
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-2xl">${CATEGORIES[key].emoji}</span>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            ${dateGroups.map(g => `
+              <button type="button" data-goto="${g.date}" class="text-left p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-card dark:shadow-card-dark hover:border-brand-300 dark:hover:border-brand-700 transition-colors group">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-lg">📅</span>
                   <i data-lucide="arrow-right" class="w-4 h-4 text-slate-300 group-hover:text-brand-500 transition-colors"></i>
                 </div>
-                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${CATEGORIES[key].label}</p>
-                <p class="text-xl font-bold mt-1">${val > 0 ? formatCurrency(val, 'INR') : '—'}</p>
-                <div class="mt-3 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all" style="width: ${(val / maxVal) * 100}%"></div>
+                <p class="text-sm font-semibold">${formatDate(g.date)}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${g.docs.length} booking${g.docs.length !== 1 ? 's' : ''}</p>
+                <p class="text-lg font-bold mt-2 text-brand-600 dark:text-brand-400">${g.totalInr > 0 ? formatCurrency(g.totalInr, 'INR') : '—'}</p>
+                <div class="mt-2 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all" style="width: ${(g.totalInr / maxVal) * 100}%"></div>
                 </div>
               </button>
+            `).join('')}
+          </div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            ${Object.entries(breakdown).map(([key, val]) => `
+              <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <p class="text-xs text-slate-500 dark:text-slate-400">${CATEGORIES[key].emoji} ${CATEGORIES[key].label}</p>
+                <p class="text-base font-bold mt-1">${val > 0 ? formatCurrency(val, 'INR') : '—'}</p>
+              </div>
             `).join('')}
           </div>
 
@@ -868,9 +972,11 @@
           </div>
 
           <div>
-            <h3 class="font-semibold mb-4">All Documents</h3>
-            <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              ${filtered.length ? filtered.map(renderDocumentCard).join('') : emptyState('No documents match your search')}
+            <h3 class="font-semibold mb-4">All Bookings by Date</h3>
+            <div class="space-y-8">
+              ${filtered.length
+                ? groupDocumentsByDate(filtered).map((g, i, arr) => renderDateSection(g, i === arr.length - 1)).join('')
+                : emptyState('No documents match your search')}
             </div>
           </div>
         </div>
@@ -895,37 +1001,18 @@
       renderExpenseBanner();
 
       const main = document.getElementById('main-content');
-      const cat = CATEGORIES[activeCategory];
-
-      if (activeCategory === 'summary') {
-        main.innerHTML = renderSummaryView();
-      } else {
-        const docs = getFilteredDocs(activeCategory);
-        main.innerHTML = `
-          <div class="animate-in">
-            <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-5 sm:mb-6">
-              <div>
-                <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2">
-                  <span>${cat.emoji}</span> ${cat.label}
-                </h2>
-                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">${cat.description} · ${docs.length} document${docs.length !== 1 ? 's' : ''}</p>
-              </div>
-              ${docs.length ? `
-                <p class="text-sm font-semibold text-brand-600 dark:text-brand-400">
-                  ${formatCurrency(docs.reduce((s, d) => s + amountInInr(d), 0), 'INR')} subtotal
-                </p>
-              ` : ''}
-            </div>
-            <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              ${docs.length ? docs.map(renderDocumentCard).join('') : emptyState(searchQuery ? 'No matches found' : 'No documents in this category')}
-            </div>
-          </div>
-        `;
-      }
+      main.innerHTML = activeCategory === 'summary' ? renderSummaryView() : renderTimelineView();
 
       bindCardActions();
       document.querySelectorAll('[data-goto]').forEach(btn => {
-        btn.addEventListener('click', () => setCategory(btn.dataset.goto));
+        btn.addEventListener('click', () => {
+          activeCategory = 'timeline';
+          render();
+          setTimeout(() => {
+            const el = document.querySelector(`[data-date="${btn.dataset.goto}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 100);
+        });
       });
 
       lucide.createIcons();
